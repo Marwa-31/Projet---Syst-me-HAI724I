@@ -6,12 +6,19 @@ import re
 from recherche_plot import filtrer_donnees , afficher_graphique
 
 # Lecture des données depuis le fichier
-
-
-
-
-
-
+def lire_fichier(fichier):
+    donnees = []
+    try:
+        with open(fichier, "r") as fd:
+            for ligne in fd:
+                # Vérifie si la ligne est valide (deux nombres séparés par un espace)
+                if re.match(r"^\s*\d+(\.\d+)?\s+\d+(\.\d+)?\s*$", ligne):
+                    longueur, intensite = map(float, ligne.split())  
+                    donnees.append((longueur, intensite))  
+    except FileNotFoundError:
+        print(f"Erreur : le fichier {fichier} est introuvable.")
+        sys.exit(1)  # Arrête le programme en cas d'erreur
+    return donnees
 
 # Normalisation des intensités
 def normaliser_donnees(donnees):
@@ -33,13 +40,16 @@ def normaliser_donnees(donnees):
 
 
 # Organisation des données en fenêtres
-
-
-
-
-
-
-
+ def creer_fenetres(donnees, pas):
+    fenetres = {} 
+    for longueur, intensite in donnees:
+        borne_inf = int(longueur // pas) * pas 
+        borne_sup = borne_inf + pas
+        cle = f"[{borne_inf}-{borne_sup}[" 
+        if cle not in fenetres:
+            fenetres[cle] = []
+        fenetres[cle].append(intensite)
+    return fenetres
 
 # Calcul des statistiques pour chaque fenêtre
 def calculer_statistiques(fenetres):
@@ -85,12 +95,18 @@ def main():
     afficher_resultats(stats)
     
     # Demander les bornes à l'utilisateur
+try:
+        borne_inf = float(input("Entrez la borne inférieure de l'intervalle (nm) : ")) 
+        borne_sup = float(input("Entrez la borne supérieure de l'intervalle (nm) : "))
+        if borne_inf >= borne_sup:
+            raise ValueError("La borne inférieure doit être strictement inférieure à la borne supérieure.")
+    except ValueError as e:
+        print(f"Erreur : {e}", file=sys.stderr)
+        sys.exit(1)
 
 
-
-
-
-    
+    donnees_filtrees = filtrer_donnees(donnees_normalisees, borne_inf, borne_sup) 
+    afficher_graphique(donnees_filtrees, borne_inf, borne_sup)    
 
 # Point d'entrée du programme
 if _name_ == "_main_":
